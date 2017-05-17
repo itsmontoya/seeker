@@ -25,8 +25,8 @@ const (
 	charNewline = '\n'
 )
 
-// NewSeeker will return a pointer to a new instance of Seeker
-func NewSeeker(f file.Interface) *Seeker {
+// New will return a pointer to a new instance of Seeker
+func New(f file.Interface) *Seeker {
 	var s Seeker
 	s.f = f
 	s.lbuf = bytes.NewBuffer(nil)
