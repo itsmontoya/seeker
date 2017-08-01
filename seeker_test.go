@@ -26,7 +26,7 @@ func TestSeeker(t *testing.T) {
 	f.WriteString("Line 1\n")
 	f.WriteString("Line 2\n")
 
-	s := NewSeeker(f)
+	s := New(f)
 
 	if err = s.SeekToStart(); err != nil {
 		t.Fatal(err)

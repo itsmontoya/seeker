@@ -14,6 +14,8 @@ const (
 	ErrLineNotFound = errors.Error("line not found")
 	// ErrInvalidLineNumber is returned when an invalid line number is provided
 	ErrInvalidLineNumber = errors.Error("invalid line number provided")
+	// ErrEndEarly is returned when line reading has ended early
+	ErrEndEarly = errors.Error("ended early")
 )
 
 const (
@@ -56,7 +58,7 @@ func (s *Seeker) seekBackwards(cc int64) (nc int64, err error) {
 	return s.f.Seek(-cc, os.SEEK_CUR)
 }
 
-func (s *Seeker) readChunks(fn func(int) bool) (err error) {
+func (s *Seeker) readChunks(fn func(int) error) (err error) {
 	var n int
 
 	for n, err = s.f.Read(s.sbuf[:]); ; n, err = s.f.Read(s.sbuf[:]) {
@@ -67,7 +69,11 @@ func (s *Seeker) readChunks(fn func(int) bool) (err error) {
 			break
 		}
 
-		if fn(n) {
+		if err = fn(n); err != nil {
+			if err == ErrEndEarly {
+				err = nil
+			}
+
 			break
 		}
 	}
@@ -177,13 +183,13 @@ func (s *Seeker) NextLine() (err error) {
 		offset int64 = -1
 	)
 
-	pcfn := func(n int) (end bool) {
+	pcfn := func(n int) (err error) {
 		for i, b := range s.sbuf[:n] {
 			if b == charNewline {
 				nlf = true
 			} else if nlf {
 				offset = int64(n - i)
-				return true
+				return ErrEndEarly
 			}
 		}
 
