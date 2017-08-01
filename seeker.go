@@ -58,7 +58,7 @@ func (s *Seeker) seekBackwards(cc int64) (nc int64, err error) {
 	return s.f.Seek(-cc, os.SEEK_CUR)
 }
 
-func (s *Seeker) readChunks(fn func(int) error) (err error) {
+func (s *Seeker) readChunks(fn func(int) bool) (err error) {
 	var n int
 
 	for n, err = s.f.Read(s.sbuf[:]); ; n, err = s.f.Read(s.sbuf[:]) {
@@ -69,11 +69,7 @@ func (s *Seeker) readChunks(fn func(int) error) (err error) {
 			break
 		}
 
-		if err = fn(n); err != nil {
-			if err == ErrEndEarly {
-				err = nil
-			}
-
+		if fn(n) {
 			break
 		}
 	}
@@ -156,8 +152,9 @@ func (s *Seeker) SeekToLine(n int) (err error) {
 	}
 
 READ:
-	if err = s.ReadLine(func(b *bytes.Buffer) {
+	if err = s.ReadLine(func(b *bytes.Buffer) error {
 		curr++
+		return nil
 	}); err != nil {
 		goto END
 	}
@@ -183,13 +180,13 @@ func (s *Seeker) NextLine() (err error) {
 		offset int64 = -1
 	)
 
-	pcfn := func(n int) (err error) {
+	pcfn := func(n int) (end bool) {
 		for i, b := range s.sbuf[:n] {
 			if b == charNewline {
 				nlf = true
 			} else if nlf {
 				offset = int64(n - i)
-				return ErrEndEarly
+				return true
 			}
 		}
 
@@ -247,7 +244,7 @@ func (s *Seeker) PrevLine() (err error) {
 }
 
 // ReadLine will return a line in the form of an a bytes.Buffer
-func (s *Seeker) ReadLine(fn func(*bytes.Buffer)) (err error) {
+func (s *Seeker) ReadLine(fn func(*bytes.Buffer) error) (err error) {
 	var (
 		n   int
 		b   []byte
@@ -267,8 +264,7 @@ func (s *Seeker) ReadLine(fn func(*bytes.Buffer)) (err error) {
 
 		s.lbuf.Write(b[:idx])
 		s.f.Seek(int64(-(n - idx - 1)), os.SEEK_CUR)
-		err = nil
-		fn(s.lbuf)
+		err = fn(s.lbuf)
 		break
 	}
 
@@ -278,15 +274,12 @@ func (s *Seeker) ReadLine(fn func(*bytes.Buffer)) (err error) {
 
 // ReadLines will return all lines in the form of an a bytes.Buffer
 // Provided function can return true to end iteration early
-func (s *Seeker) ReadLines(fn func(*bytes.Buffer) bool) (err error) {
-	var end bool
-	for err == nil && !end {
-		err = s.ReadLine(func(b *bytes.Buffer) {
-			end = fn(b)
-		})
+func (s *Seeker) ReadLines(fn func(*bytes.Buffer) error) (err error) {
+	for err == nil {
+		err = s.ReadLine(fn)
 	}
 
-	if err == io.EOF {
+	if err == io.EOF || err == ErrEndEarly {
 		err = nil
 	}
 
