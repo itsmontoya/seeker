@@ -26,15 +26,16 @@ func TestSeeker(t *testing.T) {
 	f.WriteString("Line 1\n")
 	f.WriteString("Line 2\n")
 
-	s := NewSeeker(f)
+	s := New(f)
 
 	if err = s.SeekToStart(); err != nil {
 		t.Fatal(err)
 	}
 
 	var str string
-	if err = s.ReadLine(func(buf *bytes.Buffer) {
+	if err = s.ReadLine(func(buf *bytes.Buffer) error {
 		str = buf.String()
+		return nil
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -43,8 +44,9 @@ func TestSeeker(t *testing.T) {
 		t.Fatalf("invalid string, expected %s and received %s", "Line 0", str)
 	}
 
-	if err = s.ReadLine(func(buf *bytes.Buffer) {
+	if err = s.ReadLine(func(buf *bytes.Buffer) error {
 		str = buf.String()
+		return nil
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -53,8 +55,9 @@ func TestSeeker(t *testing.T) {
 		t.Fatalf("invalid string, expected %s and received %s", "Line 1", str)
 	}
 
-	if err = s.ReadLine(func(buf *bytes.Buffer) {
+	if err = s.ReadLine(func(buf *bytes.Buffer) error {
 		str = buf.String()
+		return nil
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -63,8 +66,9 @@ func TestSeeker(t *testing.T) {
 		t.Fatalf("invalid string, expected %s and received %s", "Line 2", str)
 	}
 
-	if err = s.ReadLine(func(buf *bytes.Buffer) {
+	if err = s.ReadLine(func(buf *bytes.Buffer) error {
 		str = buf.String()
+		return nil
 	}); err != io.EOF {
 		if err == nil {
 			t.Fatal("no error encountered when io.EOF was expected")
@@ -81,8 +85,9 @@ func TestSeeker(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err = s.ReadLine(func(buf *bytes.Buffer) {
+	if err = s.ReadLine(func(buf *bytes.Buffer) error {
 		str = buf.String()
+		return nil
 	}); err != nil {
 		t.Fatal(err)
 	}
