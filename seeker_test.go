@@ -33,7 +33,12 @@ func TestSeeker(t *testing.T) {
 	}
 
 	if err = s.PrevLine(); err != io.EOF {
-		t.Fatalf("invalid error, expected io.EOF: %v", err)
+		t.Fatalf("expected io.EOF, received: %v", err)
+	}
+
+	s.NextLine()
+	if err = s.PrevLine(); err != nil {
+		t.Fatal(err)
 	}
 
 	var str string

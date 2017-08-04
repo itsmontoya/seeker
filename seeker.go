@@ -209,6 +209,7 @@ func (s *Seeker) NextLine() (err error) {
 func (s *Seeker) PrevLine() (err error) {
 	var (
 		nlc    int
+		rel    int64
 		offset int64 = -1
 	)
 
@@ -230,15 +231,25 @@ func (s *Seeker) PrevLine() (err error) {
 		return
 	}
 
+	// Get current index
+	if rel, err = s.f.Seek(0, os.SEEK_CUR); err != nil {
+		return
+	}
+
+	if rel == 0 {
+		return io.EOF
+	}
+
 	if err = s.readReverseChunks(pcfn); err != nil {
 		return
 	}
 
 	if offset == -1 {
-		return io.EOF
+		_, err = s.f.Seek(0, os.SEEK_SET)
+	} else {
+		_, err = s.f.Seek(-offset, os.SEEK_CUR)
 	}
 
-	_, err = s.f.Seek(-offset, os.SEEK_CUR)
 	return
 }
 
