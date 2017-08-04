@@ -32,6 +32,10 @@ func TestSeeker(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	if err = s.PrevLine(); err != io.EOF {
+		t.Fatalf("invalid error, expected io.EOF: %v", err)
+	}
+
 	var str string
 	if err = s.ReadLine(func(buf *bytes.Buffer) error {
 		str = buf.String()

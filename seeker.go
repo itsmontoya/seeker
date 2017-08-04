@@ -235,11 +235,10 @@ func (s *Seeker) PrevLine() (err error) {
 	}
 
 	if offset == -1 {
-		_, err = s.f.Seek(0, os.SEEK_SET)
-	} else {
-		_, err = s.f.Seek(-offset, os.SEEK_CUR)
+		return io.EOF
 	}
 
+	_, err = s.f.Seek(-offset, os.SEEK_CUR)
 	return
 }
 
