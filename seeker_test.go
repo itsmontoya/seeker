@@ -28,6 +28,10 @@ func TestSeeker(t *testing.T) {
 
 	s := New(f)
 
+	if err = s.NextLine(); err != ErrLineNotFound {
+		t.Fatalf("expected ErrLineNotFound, recieved: %v", err)
+	}
+
 	if err = s.SeekToStart(); err != nil {
 		t.Fatal(err)
 	}
