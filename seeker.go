@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/itsmontoya/async/file"
 	"github.com/missionMeteora/toolkit/errors"
 )
 
@@ -28,7 +27,7 @@ const (
 )
 
 // New will return a pointer to a new instance of Seeker
-func New(f file.Interface) *Seeker {
+func New(f io.ReadSeeker) *Seeker {
 	var s Seeker
 	s.f = f
 	s.lbuf = bytes.NewBuffer(nil)
@@ -38,7 +37,7 @@ func New(f file.Interface) *Seeker {
 // Seeker is a file seeker
 type Seeker struct {
 	// File
-	f file.Interface
+	f io.ReadSeeker
 	// Seek buffer, used for storing read data while seeking
 	sbuf [seekerBufSize]byte
 	// Line buffer, used for storing lines
@@ -122,7 +121,7 @@ func (s *Seeker) readReverseChunks(fn func(int) bool) (err error) {
 }
 
 // SetFile will set a file
-func (s *Seeker) SetFile(f file.Interface) {
+func (s *Seeker) SetFile(f io.ReadSeeker) {
 	s.f = f
 }
 
